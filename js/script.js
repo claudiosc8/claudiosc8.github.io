@@ -77,14 +77,9 @@ animate();
 
 
 
-
-var loader = new THREE.ObjectLoader();
-
-loader.load( shapeObjectUrl, 
-    function ( geometry, materials ) {
-        console.log(geometry, materials);
-        var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial() );
-        scene.add( mesh );
-        console.log(mesh);
-        render();
-});
+// BEGIN Clara.io JSON loader code
+var objectLoader = new THREE.ObjectLoader();
+objectLoader.load("js/jscene.json", function ( obj ) {
+scene.add( obj );
+} );
+// END Clara.io JSON loader code
