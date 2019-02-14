@@ -38,36 +38,7 @@ function sceneSetup() {
 	var plane = new THREE.Mesh( planegeometry, one );
 
 
-// manager
-				function loadModel() {
-					object.traverse( function ( child ) {
-						if ( child.isMesh ) child.material.map = texture;
-					} );
-					object.position.y = - 2;
-					scene.add( object );
-				}
-				var manager = new THREE.LoadingManager( loadModel );
-				manager.onProgress = function ( item, loaded, total ) {
-					console.log( item, loaded, total );
-				};
-				// texture
-				var textureLoader = new THREE.TextureLoader( manager );
-				var texture = textureLoader.load( 'onj.jpg' );
-				// model
-				function onProgress( xhr ) {
-					if ( xhr.lengthComputable ) {
-						var percentComplete = xhr.loaded / xhr.total * 100;
-						console.log( 'model ' + Math.round( percentComplete, 2 ) + '% downloaded' );
-					}
-				}
-				function onError() {}
-				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'obj/desk.obj', function ( obj ) {
-					object = obj;
-				}, onProgress, onError );
-				//
-
-
+   
 
 	sphere.castShadow = true; 
 	sphere.receiveShadow = true; 
@@ -90,7 +61,55 @@ function sceneSetup() {
 	scene.add( plane );
 
 
+ // texture
+  var manager = new THREE.LoadingManager();
+  manager.onProgress = function(item, loaded, total) {
 
+    console.log(item, loaded, total);
+
+  };
+
+  var texture = new THREE.Texture();
+
+  var onProgress = function(xhr) {
+    if (xhr.lengthComputable) {
+      var percentComplete = xhr.loaded / xhr.total * 100;
+      console.log(Math.round(percentComplete, 2) + '% downloaded');
+    }
+  };
+
+  var onError = function(xhr) {};
+
+  var loader = new THREE.ImageLoader(manager);
+   loader.load('image.png', function(image) {
+
+    texture.image = image;
+    texture.needsUpdate = true;
+
+  });
+
+  // model
+  var loader = new THREE.OBJLoader(manager);
+  loader.load('obj/Desk.obj', function(object) {
+
+    object.traverse(function(child) {
+
+      if (child instanceof THREE.Mesh) {
+
+        child.material.map = texture;
+
+      }
+
+    });
+
+    object.scale.x = 45;
+    object.scale.y = 45;
+    object.scale.z = 45;
+    object.rotation.y = 3;
+    object.position.y = -10.5;
+    scene.add(object);
+
+  }, onProgress, onError);
 
 	function animateElem() {
 	cube.rotation.x += 0.01;
@@ -98,6 +117,7 @@ function sceneSetup() {
 	}
 
 	animateElem();
+
 }
 
 function onWindowResize(){
