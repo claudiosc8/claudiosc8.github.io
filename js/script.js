@@ -90,6 +90,8 @@ camera.position.z = 5;
 function animate() {
 	requestAnimationFrame( animate );
 
+	controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+
 	renderer.render( scene, camera );
   cube.rotation.x += 0.01;
 sphere.rotation.y += 0.01;
