@@ -1,12 +1,7 @@
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
-//controls
-var controls = new THREE.OrbitControls( camera );
 
-//controls.update() must be called after any manual changes to the camera's transform
-camera.position.set( 0, 20, 100 );
-controls.update();
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -77,9 +72,6 @@ function animate() {
 	renderer.render( scene, camera );
   cube.rotation.x += 0.01;
 sphere.rotation.y += 0.01;
-
-	// required if controls.enableDamping or controls.autoRotate are set to true
-	controls.update();
 
   
 }
