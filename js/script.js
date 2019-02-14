@@ -23,14 +23,6 @@ function onWindowResize(){
 
 }
 
-
-
-//controls.update() must be called after any manual changes to the camera's transform
-camera.position.set( 0, 20, 100 );
-controls.update();
-
-
-
 scene.add( new THREE.AmbientLight( 0x666666 ) );
 				var light = new THREE.DirectionalLight( 0xdfebff, 1 );
 				light.position.set( 3, 3, 2 );
