@@ -16,6 +16,25 @@ function onWindowResize(){
 
 }
 
+//controls
+var controls = new THREE.OrbitControls( camera );
+
+//controls.update() must be called after any manual changes to the camera's transform
+camera.position.set( 0, 20, 100 );
+controls.update();
+
+function animate() {
+
+	requestAnimationFrame( animate );
+
+	// required if controls.enableDamping or controls.autoRotate are set to true
+	controls.update();
+
+	renderer.render( scene, camera );
+
+}
+
+
 scene.add( new THREE.AmbientLight( 0x666666 ) );
 				var light = new THREE.DirectionalLight( 0xdfebff, 1 );
 				light.position.set( 3, 3, 2 );
