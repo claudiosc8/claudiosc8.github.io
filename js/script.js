@@ -23,16 +23,6 @@ var controls = new THREE.OrbitControls( camera );
 camera.position.set( 0, 20, 100 );
 controls.update();
 
-function animate() {
-
-	requestAnimationFrame( animate );
-
-	// required if controls.enableDamping or controls.autoRotate are set to true
-	controls.update();
-
-	renderer.render( scene, camera );
-
-}
 
 
 scene.add( new THREE.AmbientLight( 0x666666 ) );
@@ -89,6 +79,10 @@ function animate() {
 	renderer.render( scene, camera );
   cube.rotation.x += 0.01;
 sphere.rotation.y += 0.01;
+
+	// required if controls.enableDamping or controls.autoRotate are set to true
+	controls.update();
+
   
 }
 animate();
