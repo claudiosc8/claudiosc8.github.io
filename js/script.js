@@ -80,13 +80,11 @@ animate();
 
 var loader = new THREE.ObjectLoader();
 
-var loader = new THREE.JSONLoader();
-        loader.load( 'js/scene.json', function ( geometry ) {
+loader.load( shapeObjectUrl, 
+    function ( geometry, materials ) {
+        console.log(geometry, materials);
         var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial() );
-
-                        mesh.position.x =500;
-                        mesh.position.y =100;
-                        mesh.position.z =500;
         scene.add( mesh );
-
-        }); 
+        console.log(mesh);
+        render();
+});
