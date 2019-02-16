@@ -68,7 +68,7 @@
 				};
 				// texture
 				var textureLoader = new THREE.TextureLoader( manager );
-				var texture = textureLoader.load( 'obj/UV_Grid_Sm.jpg' );
+				var texture = textureLoader.load( 'object/UV_Grid_Sm.jpg' );
 				// model
 				function onProgress( xhr ) {
 					if ( xhr.lengthComputable ) {
@@ -78,7 +78,7 @@
 				}
 				function onError() {}
 				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'obj/male02.obj', function ( obj ) {
+				loader.load( 'object/male02.obj', function ( obj ) {
 					object = obj;
 				}, onProgress, onError );
 				//

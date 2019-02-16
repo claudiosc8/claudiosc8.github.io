@@ -61,15 +61,15 @@ function sceneSetup() {
 	scene.add( plane );
 
 		var mtlLoader = new THREE.MTLLoader();
-		mtlLoader.setTexturePath('obj/');
-		mtlLoader.setPath('obj/');
+		mtlLoader.setTexturePath('object/');
+		mtlLoader.setPath('object/');
 		mtlLoader.load('Desk.mtl', function (materials) {
 		 
 		    materials.preload();
 		 
 		    var objLoader = new THREE.OBJLoader();
 		    objLoader.setMaterials(materials);
-		    objLoader.setPath('obj/');
+		    objLoader.setPath('object/');
 		    objLoader.load('Desk.obj', function (myobject) {
 		 
 		        scene.add(myobject);
