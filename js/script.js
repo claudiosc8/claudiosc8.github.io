@@ -60,24 +60,36 @@ function sceneSetup() {
 	scene.add( sphere );
 	scene.add( plane );
 
-		var mtlLoader = new THREE.MTLLoader();
-		mtlLoader.setTexturePath('object/');
-		mtlLoader.setPath('object/');
-		mtlLoader.load('Desk.mtl', function (materials) {
-		 
-		    materials.preload();
-		 
-		    var objLoader = new THREE.OBJLoader();
-		    objLoader.setMaterials(materials);
-		    objLoader.setPath('object/');
-		    objLoader.load('Desk.obj', function (myobject) {
-		 
-		        scene.add(myobject);
-		        myobject.position.y = 2;
-		 
-		    });
-		 
-		});
+		// manager
+				function loadModel() {
+					object.traverse( function ( child ) {
+						if ( child.isMesh ) child.material.map = texture;
+					} );
+					object.position.y = - 2;
+					scene.add( object );
+				}
+				var manager = new THREE.LoadingManager( loadModel );
+				manager.onProgress = function ( item, loaded, total ) {
+					console.log( item, loaded, total );
+				};
+				// texture
+				var textureLoader = new THREE.TextureLoader( manager );
+				var texture = textureLoader.load( 'object/UV_Grid_Sm.jpg' );
+				// model
+				function onProgress( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( 'model ' + Math.round( percentComplete, 2 ) + '% downloaded' );
+					}
+				}
+				function onError() {}
+				var loader = new THREE.OBJLoader( manager );
+				loader.load( 'object/male02.obj', function ( obj ) {
+					object = obj;
+				}, onProgress, onError );
+				//
+
+
 
 	function animateElem() {
 	cube.rotation.x += 0.01;
