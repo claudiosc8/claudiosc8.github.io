@@ -1,12 +1,5 @@
 let camera, scene, renderer, player;
 
-import FirstPersonControls from 'first-person-controls'
- 
-const controls = new FirstPersonControls(camera)
-controls.lookSpeed = 0.1
-controls.movementSpeed = 10
- 
-const clock = new THREE.Clock(true)
 
 function init() {
 	renderer = new THREE.WebGLRenderer();
@@ -133,7 +126,6 @@ function onWindowResize(){
 function animate() {
 	requestAnimationFrame( animate );
 	controls.update();
-	controls.update(clock.getDelta())
 	render();
 }
 
