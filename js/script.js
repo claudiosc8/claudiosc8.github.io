@@ -1,6 +1,7 @@
-let camera, scene, renderer, player, controls, targetPosition;
+let camera, scene, renderer, player, controls, targetPosition, model, cameraPosition, modelDistance;
 let now, delta, last;
 let clock;
+let robot, mixer;
 
 function init() {
 	clock = new THREE.Clock();
@@ -14,7 +15,9 @@ function init() {
 	renderer.gammaFactor = 2.2;
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-	camera.position.set(0,7,10);
+	camera.position.set(0,7,0);
+
+ 	cameraPosition = camera.position;
 
 	// Ordbit controls
 	// controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -66,21 +69,17 @@ function init() {
 
 	rotateObject(plane, 90, 0, 0);
 	plane.position.set(0,-0.02,0);
-	player.position.set(0,2,0);
-	cube.position.set(2,4,0);
+	player.position.set(10,2,-10);
+	cube.position.set(-12,4,20);
 	var helper = new THREE.GridHelper( 100, 20, 0xFF4444, 0x404040 );
 	scene.add( helper );
 
 	scene.add( cube );
 	scene.add( player );
 	scene.add( plane );
-	targetPosition = player.position
+	targetPosition = new THREE.Vector3( );
 
 	controls = new THREE.FirstPersonControls( player );
-
-                controls.movementSpeed = 15;
-                controls.rotationSpeed = 5;
-	// model
 
 
 	function error ( error ) {console.error( error );}
@@ -94,7 +93,7 @@ function init() {
 	         obj.castShadow = true; 
 	         obj.receiveShadow = true; 
 	         obj.scale.set(12,12,12);
-			obj.position.set(0,0.6,0);
+			obj.position.set(5,0.6,-15);
 			}
 	    } );
 
@@ -102,24 +101,71 @@ function init() {
 
 	}, undefined, error );
 
+	var robotloader = new THREE.GLTFLoader();
+				robotloader.load( "object/RobotExpressive.glb", function( gltf ) {
 
-	loader.load( 'object/astro.glb', function ( gltf ) {
+					robot = gltf.scene.children[ 0 ];
+					run = gltf.animations[ 6 ];
+					idle = gltf.animations[ 2 ];
+					jump = gltf.animations[ 3 ];
+					walk = gltf.animations[ 10 ];
+					walkjump = gltf.animations[ 11 ];
 
-		gltf.scene.traverse( function( obj ) {
+					robot.traverse( function( obj ) {
+	       				 if ( obj instanceof THREE.Mesh ) {
+				        	obj.castShadow = true; 
+				       	  	obj.receiveShadow = true;
+				       	  	rotateObject(obj, 0, 0, 0); 
+						}
+					} );
+					scene.add( robot );
+					myfoo();
+					
+
+				} );
+
+	function myfoo() {
+					robot.scale.set( 1, 1, 1 );
+					robot.position.set(-5, 0, -10 );
+
+					targetPosition = robot.position;
+					controls = new THREE.FirstPersonControls( robot );
+        			controls.movementSpeed = 15;
+        			controls.rotationSpeed = 5;
+
+        			mixer = new THREE.AnimationMixer( robot );
+        			mixer.clipAction( idle ).setDuration( 5).play();
+					
+	}
+
+	var playerloader = new THREE.GLTFLoader();
+	playerloader.load( 'object/astro.glb', function ( gltf ) {
+		model = gltf.scene;
+		model.traverse( function( obj ) {
 	        if ( obj instanceof THREE.Mesh ) {
 	        	obj.castShadow = true; 
-	       	  	obj.receiveShadow = true; 
-	       	  	obj.scale.set(1,1,1);
-				obj.position.set(-2,0,0);
+	       	  	obj.receiveShadow = true;
+	       	  	rotateObject(obj, 0, 180, 0); 
 			}
 	    } );
 
-		scene.add( gltf.scene );
+		scene.add( model );
+		model.scale.set(1,1,1);
+		model.position.set(0,0,-10);
+		onModelLoad();
+		
 
 	}, undefined, error );
+
+
+	function onModelLoad () {
+		
+		console.log("model loaded")
+		
+	}
+	// model
 	
-	
-	
+		
 }
 
 
@@ -135,11 +181,29 @@ function animate() {
 	var delta = clock.getDelta();
 	controls.update(delta);
 	camera.lookAt(targetPosition);
+	if(cameraPosition.distanceTo(targetPosition)>40) {
+		console.log("too far!");
+		controls.moveForward = false;
+	}
+
+	// if(controls.moveForward) {
+	// 	mixer.clipAction( run ).setDuration( 1 ).play();
+	// } else {
+	// 	mixer.clipAction( run ).stop();
+	// }
 	render();
 }
 
+var prevTime = Date.now();
+
 function render() {
 	renderer.render( scene, camera );
+
+	if ( mixer ) {
+		var time = Date.now();
+		mixer.update( ( time - prevTime ) * 0.001 );
+		prevTime = time;
+	}
 }
 
 init();

@@ -41,6 +41,7 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	this.moveRight = false;
 	this.rotateLeft = false;
 	this.rotateRight = false;
+	this.Jump = false;
 
 
 	this.mouseDragOn = false;
@@ -109,6 +110,8 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 			case 82: /*R*/ this.moveUp = true; break;
 			case 70: /*F*/ this.moveDown = true; break;
 
+			case 32: /*SPACE*/ this.Jump = true; break;
+
 		}
 
 	};
@@ -135,6 +138,8 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 			case 82: /*R*/ this.moveUp = false; break;
 			case 70: /*F*/ this.moveDown = false; break;
+
+			case 32: /*SPACE*/ this.Jump = false; break;
 
 		}
 
@@ -205,21 +210,47 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 			var actualMoveSpeed = delta * this.movementSpeed;
 			var actualRotation = delta * this.rotationSpeed;
 
-			if ( this.moveForward || ( this.autoForward && ! this.moveBackward ) ) this.object.translateZ( - ( actualMoveSpeed + this.autoSpeedFactor ) );
-			if ( this.moveBackward ) this.object.translateZ( actualMoveSpeed );
+			if ( this.moveForward || ( this.autoForward && ! this.moveBackward ) ) {
+				this.object.translateZ(  ( actualMoveSpeed + this.autoSpeedFactor ) );
+				if (!mixer.clipAction( run ).isRunning()) {
+				mixer.clipAction( run ).setDuration( 1 ).play()
+				}
+			}
+
+			if (!this.moveForward) {
+				mixer.clipAction( run ).stop();
+			}
+			if ( this.moveBackward ) {
+				this.object.translateZ( - actualMoveSpeed/2 );
+				mixer.clipAction( walk ).setDuration( -1 ).play();
+			}
+			if (!this.moveBackward) {
+				mixer.clipAction( walk ).stop();
+			}
+
 
 			if ( this.moveLeft ) this.object.translateX( - actualMoveSpeed );
 			if ( this.moveRight ) this.object.translateX( actualMoveSpeed );
 
 			if ( this.rotateLeft )   this.object.rotateY(actualRotation);
-			if ( this.rotateRight )  this.object.rotateY(-actualRotation)
+			if ( this.rotateRight )  this.object.rotateY(-actualRotation);
 
-					if ( this.moveUp ) this.object.translateY( actualMoveSpeed );
+			if ( this.rotateRight || this.rotateLeft) {
+				
+			} 
+
+			if ( this.moveUp ) this.object.translateY( actualMoveSpeed );
 			if ( this.moveDown ) this.object.translateY( - actualMoveSpeed );
 
 
+			if ( this.Jump ) {
+				
+				if (!mixer.clipAction( walkjump ).isRunning()) {
 
-			
+				mixer.clipAction( walkjump ).setDuration( 1 ).setLoop( THREE.LoopOnce ).play().reset();
+				}
+			};
+
 
 		};
 
