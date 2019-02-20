@@ -1,7 +1,10 @@
-let camera, scene, renderer, player;
-
+let camera, scene, renderer, player, controls;
+let now, delta, last;
+let clock;
 
 function init() {
+	clock = new THREE.Clock();
+
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize( window.innerWidth, window.innerHeight ); 
 	document.body.appendChild( renderer.domElement );
@@ -11,20 +14,16 @@ function init() {
 	renderer.gammaFactor = 2.2;
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-	camera.position.set(0,3,5);
+	camera.position.set(0,3,50);
 	// controls
-	controls = new THREE.OrbitControls( camera, renderer.domElement );
-	// controls.enableDamping = true; 
-	// controls.dampingFactor = 0;
-	controls.screenSpacePanning = false;
+	// controls = new THREE.OrbitControls( camera, renderer.domElement );
+	// // controls.enableDamping = true; 
+	// // controls.dampingFactor = 0;
+	// controls.screenSpacePanning = false;
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	
-}
 
 
-function sceneSetup() {
-	// lights
 
 	var light = new THREE.DirectionalLight( 0xffffff );
 	light.position.set( 0, 20, 10 );
@@ -76,6 +75,13 @@ function sceneSetup() {
 	scene.add( plane );
 
 
+	controls = new THREE.FirstPersonControls( player );
+
+                controls.movementSpeed = 7;
+                controls.lookSpeed = 0.1;
+                controls.noFly = true;
+                controls.lookVertical = false;
+                // controls.mouseDragOn = false;
 	// model
 
 
@@ -117,6 +123,7 @@ function sceneSetup() {
 
 }
 
+
 function onWindowResize(){
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -125,7 +132,9 @@ function onWindowResize(){
 				
 function animate() {
 	requestAnimationFrame( animate );
-	controls.update();
+	// controls.update();
+	var delta = clock.getDelta();
+	controls.update(delta);
 	render();
 }
 
@@ -134,5 +143,4 @@ function render() {
 }
 
 init();
-sceneSetup();
 animate();
