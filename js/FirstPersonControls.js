@@ -49,6 +49,14 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	this.viewHalfX = 0;
 	this.viewHalfY = 0;
 
+	function myAnimation(action, duration = 1, loop = THREE.LoopRepeat) {
+		if (!mixer.clipAction( action ).isRunning()) {
+		mixer.clipAction( action ).setDuration( duration ).setLoop( loop ).play().reset()
+
+
+		}
+	}
+
 	// private variables
 
 	var lat = 0;
@@ -212,9 +220,9 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 			if ( this.moveForward || ( this.autoForward && ! this.moveBackward ) ) {
 				this.object.translateZ(  ( actualMoveSpeed + this.autoSpeedFactor ) );
-				if (!mixer.clipAction( run ).isRunning()) {
-				mixer.clipAction( run ).setDuration( 1 ).play()
-				}
+				
+				myAnimation(run,1);
+				
 			}
 
 			if (!this.moveForward) {
@@ -222,7 +230,9 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 			}
 			if ( this.moveBackward ) {
 				this.object.translateZ( - actualMoveSpeed/2 );
-				mixer.clipAction( walk ).setDuration( -1 ).play();
+				mixer.clipAction( idle ).reset();
+				myAnimation(walk,-1);
+
 			}
 			if (!this.moveBackward) {
 				mixer.clipAction( walk ).stop();
@@ -244,12 +254,18 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 
 			if ( this.Jump ) {
+				mixer.clipAction( idle ).stop();
+				mixer.clipAction( run ).stop();
+				myAnimation(death, 1, THREE.LoopOnce);
 				
-				if (!mixer.clipAction( walkjump ).isRunning()) {
-
-				mixer.clipAction( walkjump ).setDuration( 1 ).setLoop( THREE.LoopOnce ).play().reset();
-				}
 			};
+
+	
+
+
+			// if (!this.moveForward || !this.moveBackward || !this.moveLeft || !this.moveRight || !this.Jump  ) {
+			// 	mixer.clipAction( idle ).setDuration( 5 ).play();
+			// }
 
 
 		};
