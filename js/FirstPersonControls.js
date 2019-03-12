@@ -177,7 +177,9 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 		var targetPosition = new THREE.Vector3();
 
+
 		return function update( delta ) {
+			
 
 			if ( this.enabled === false ) return;
 
@@ -279,8 +281,6 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	}
 
 	this.dispose = function () {
-
-
 
 		window.removeEventListener( 'keydown', _onKeyDown, false );
 		window.removeEventListener( 'keyup', _onKeyUp, false );
