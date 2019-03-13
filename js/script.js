@@ -82,7 +82,7 @@ function load() {
   	const createastro = GLTFPromiseLoader.load( 'object/astro.glb').then( onLoad ).then( astroSetup ).catch( onError )
   	const createDesk = GLTFPromiseLoader.load( 'object/desk.glb').then( onLoad ).then( deskSetup ).catch( onError );
   	const createChest = GLTFPromiseLoader.load( 'object/chest.glb').then( onLoad ).then( chestSetup ).catch( onError );
-  	// const createStation = GLTFPromiseLoader.load( 'object/GasStation.glb').then( onLoad ).then( stationSetup ).catch( onError );
+  	const createStation = GLTFPromiseLoader.load( 'object/GasStation.glb').then( onLoad ).then( stationSetup ).catch( onError );
   }
 
 	const RobotPlayer = () => {
