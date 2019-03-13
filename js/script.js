@@ -266,59 +266,59 @@ function init() {
 	collisionMesh = [];
 
 
-     // postprocessing
-    composer = new THREE.EffectComposer(renderer);
+ //     // postprocessing
+ //    composer = new THREE.EffectComposer(renderer);
 
-    var renderPass = new THREE.RenderPass(scene, camera);
-    composer.addPass(renderPass);
+ //    var renderPass = new THREE.RenderPass(scene, camera);
+ //    composer.addPass(renderPass);
 
-    outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera,);
-    composer.addPass(outlinePass);
-    // outlinePass.selectedObjects = [collisionScene];
+ //    outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera,);
+ //    composer.addPass(outlinePass);
+ //    // outlinePass.selectedObjects = [collisionScene];
 
-    // for (var i = 0; i < collisionScene.children.length; i++ ) {
-    // 	selectedObject = collisionScene.children[i];
-    // 	collisionMesh.push(selectedObject);
-    // 	if (collisionScene.children[i].isMesh) {
+ //    // for (var i = 0; i < collisionScene.children.length; i++ ) {
+ //    // 	selectedObject = collisionScene.children[i];
+ //    // 	collisionMesh.push(selectedObject);
+ //    // 	if (collisionScene.children[i].isMesh) {
     	
-    //     outlinePass.selectedObjects = [player];
+ //    //     outlinePass.selectedObjects = [player];
 
-   	// 	 }
-    // }
-
-
-    effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
-    effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
-    effectFXAA.renderToScreen = true;
-    composer.addPass(effectFXAA);
+ //   	// 	 }
+ //    // }
 
 
-	outlinePass.edgeGlow = 0.0;
-	outlinePass.usePatternTexture = false;
-	outlinePass.edgeThickness = 2.0;
-	outlinePass.edgeStrength = 100.0;
-	outlinePass.downSampleRatio = 0;
-	outlinePass.pulsePeriod = 0;
-	outlinePass.visibleEdgeColor = new THREE.Color(0xffffff);
-	outlinePass.hiddenEdgeColor = new THREE.Color( 0, 0, 0 );
-	outlinePass.depthMaterial.blending = THREE.MultiplyBlending;
+ //    effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
+ //    effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
+ //    effectFXAA.renderToScreen = true;
+ //    composer.addPass(effectFXAA);
 
-    window.addEventListener('mousemove', onTouchMove);
-    window.addEventListener('touchmove', onTouchMove);
 
-    function onTouchMove(event) {
-        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
+	// outlinePass.edgeGlow = 0.0;
+	// outlinePass.usePatternTexture = false;
+	// outlinePass.edgeThickness = 2.0;
+	// outlinePass.edgeStrength = 100.0;
+	// outlinePass.downSampleRatio = 0;
+	// outlinePass.pulsePeriod = 0;
+	// outlinePass.visibleEdgeColor = new THREE.Color(0xffffff);
+	// outlinePass.hiddenEdgeColor = new THREE.Color( 0, 0, 0 );
+	// outlinePass.depthMaterial.blending = THREE.MultiplyBlending;
 
-        raycaster.setFromCamera(mouse, camera);
+ //    window.addEventListener('mousemove', onTouchMove);
+ //    window.addEventListener('touchmove', onTouchMove);
 
-        intersects = raycaster.intersectObjects(highlightObjects,true);
+ //    function onTouchMove(event) {
+ //        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+ //        mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
 
-        if (intersects.length > 0) {
-            var selectedObject = intersects[0].object;
-            outlinePass.selectedObjects = [selectedObject];
-        }
-    }
+ //        raycaster.setFromCamera(mouse, camera);
+
+ //        intersects = raycaster.intersectObjects(highlightObjects,true);
+
+ //        if (intersects.length > 0) {
+ //            var selectedObject = intersects[0].object;
+ //            outlinePass.selectedObjects = [selectedObject];
+ //        }
+ //    }
 
 }
 
