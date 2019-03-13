@@ -266,25 +266,25 @@ function init() {
 	collisionMesh = [];
 
 
- //     // postprocessing
- //    composer = new THREE.EffectComposer(renderer);
+     // postprocessing
+    composer = new THREE.EffectComposer(renderer);
 
- //    var renderPass = new THREE.RenderPass(scene, camera);
- //    composer.addPass(renderPass);
+    var renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
 
- //    outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera,);
- //    composer.addPass(outlinePass);
- //    // outlinePass.selectedObjects = [collisionScene];
+    // outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera,);
+    // composer.addPass(outlinePass);
+    // outlinePass.selectedObjects = [collisionScene];
 
- //    // for (var i = 0; i < collisionScene.children.length; i++ ) {
- //    // 	selectedObject = collisionScene.children[i];
- //    // 	collisionMesh.push(selectedObject);
- //    // 	if (collisionScene.children[i].isMesh) {
+    // for (var i = 0; i < collisionScene.children.length; i++ ) {
+    // 	selectedObject = collisionScene.children[i];
+    // 	collisionMesh.push(selectedObject);
+    // 	if (collisionScene.children[i].isMesh) {
     	
- //    //     outlinePass.selectedObjects = [player];
+    //     outlinePass.selectedObjects = [player];
 
- //   	// 	 }
- //    // }
+   	// 	 }
+    // }
 
 
  //    effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
