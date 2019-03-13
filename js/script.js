@@ -266,11 +266,11 @@ function init() {
 	collisionMesh = [];
 
 
-     // postprocessing
-    composer = new THREE.EffectComposer(renderer);
+    //  // postprocessing
+    // composer = new THREE.EffectComposer(renderer);
 
-    var renderPass = new THREE.RenderPass(scene, camera);
-    composer.addPass(renderPass);
+    // var renderPass = new THREE.RenderPass(scene, camera);
+    // composer.addPass(renderPass);
 
     // outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera,);
     // composer.addPass(outlinePass);
@@ -450,7 +450,7 @@ function render() {
 
 	// }
 
-	composer.render( scene, camera );
+	renderer.render( scene, camera );
 
 }
 
