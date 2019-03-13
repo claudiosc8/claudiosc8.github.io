@@ -4,10 +4,18 @@ let clock;
 let robot, mixer
 let raycaster, mouse, intersects, INTERSECTED, selectedObject;
 let collisionObjects = [];
+let highlightObjects = [];
 let thisChildren;
 let run, walk, jump, idle, death, walkjump;
 let collision_flag = false;
 var mirrorSphere, mirrorSphereCamera, cubeCamera; // for mirror material
+var robotCharacter, robotHelper, collisionHelper;
+
+
+var stats = new Stats();
+stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
+
 
 // Here is the magic - this function takes any three.js loader and returns a promisifiedLoader
 function promisifyLoader ( loader, onProgress ) {
@@ -78,6 +86,8 @@ function load() {
   }
 
 	const RobotPlayer = () => {
+		thisChildren.name = "robotCharacter";
+		robotCharacter = scene.getObjectByName('robotCharacter');
 		thisChildren.position.set(0,0,-20);
 		targetPosition = thisChildren.position;
 		controls = new THREE.FirstPersonControls( thisChildren );
@@ -103,12 +113,14 @@ function load() {
 	const chestSetup = () => {
 	    thisChildren.scale.set(2,2,2);
 		thisChildren.position.set(-5,3,-15);
-		thisChildren.rotateY(THREE.Math.degToRad(180))
+		thisChildren.rotateY(THREE.Math.degToRad(180));
+		collisionObjects.push(thisChildren);
 	}
 
 	const astroSetup = () => {
 	    thisChildren.scale.set(1,1,1);
 		thisChildren.position.set(-15,0,-15);
+		collisionObjects.push(thisChildren);
 
 	} 
 
@@ -182,10 +194,15 @@ function init() {
 		var sphereGeometry = new THREE.SphereGeometry( 1, 16, 16 );
 		var planegeometry = new THREE.PlaneGeometry( 100, 100, 100, 100);
 
+		var robotHelperGeometry = new THREE.CylinderGeometry( 2,2,5,8,3 );
+		var collisionHelperGeometry = new THREE.BoxGeometry( 3, 5, 2, 2,2,2);
+
 	//materials
 		var mone = new THREE.MeshPhongMaterial( { color: 0x4080ff} );
 		var mtwo = new THREE.MeshPhongMaterial( { color: 0xde2301, flatShading:false } );
 		var mthree = new THREE.MeshPhongMaterial( { color: 0x22de09, reflectivity: 1, shininess: 2} );
+
+		var robomat = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true,} );
 
 		var toonMaterial = new THREE.MeshToonMaterial( {
 								color: 0xffff00,
@@ -199,6 +216,15 @@ function init() {
 	var cube = new THREE.Mesh( cubeGeometry, mthree );
 	var player = new THREE.Mesh( sphereGeometry, toonMaterial );
 	var plane = new THREE.Mesh( planegeometry, mone );
+
+	collisionHelper = new THREE.Mesh( collisionHelperGeometry, robomat );
+	collisionHelper.name = "collisionHelper";
+	collisionHelper.position.y = 2.5 ;
+	collisionHelper.geometry.translate( 0, 0, 1 );
+
+	robotHelper = new THREE.Mesh( robotHelperGeometry, robomat );
+	robotHelper.position.y = 2.5 ;
+	robotHelper.name = "robotHelper";
 
 	plane.material.side = THREE.DoubleSide;
    	player.castShadow = true; 
@@ -224,14 +250,19 @@ function init() {
 	scene.add( player );
 	scene.add( plane );
 
+	scene.add( robotHelper );
+	scene.add( collisionHelper );
+
+	collisionObjects.push(cube, player);
+
 	TweenMax.to(cube.rotation,4,{y:Math.PI*2, ease:Power2.easeInOut,repeat:-1});
 	TweenMax.to(cube.position,4,{y:2,ease:Power2.easeInOut,yoyo:true, repeat:-1});
 
 	targetPosition = new THREE.Vector3( );
 
 	//collision objects
-	collisionObjects.push(scene);
-	collisionScene = collisionObjects[0];
+	highlightObjects.push(scene);
+	highlightScene = highlightObjects[0];
 	collisionMesh = [];
 
 
@@ -281,7 +312,7 @@ function init() {
 
         raycaster.setFromCamera(mouse, camera);
 
-        intersects = raycaster.intersectObjects(collisionObjects,true);
+        intersects = raycaster.intersectObjects(highlightObjects,true);
 
         if (intersects.length > 0) {
             var selectedObject = intersects[0].object;
@@ -308,7 +339,13 @@ function onWindowResize(){
 }
 				
 function animate() {
+
+	stats.begin();
+	stats.end();
+
 	requestAnimationFrame( animate );
+
+	
 	// controls.update();
 	var delta = clock.getDelta();
 	controls.update(delta);
@@ -342,14 +379,58 @@ function animate() {
 
 var prevTime = Date.now();
 
+
+ function checkCollision() {
+        collisionObjects.forEach(function (obj) {
+            obj.material.transparent = false;
+            obj.material.opacity = 1.0;
+        });
+
+        var forwardCollisionHelper = scene.getObjectByName('collisionHelper');
+        var originPoint = forwardCollisionHelper.position.clone();
+        for (var vertexIndex = 0; vertexIndex < forwardCollisionHelper.geometry.vertices.length; vertexIndex++) {
+            var localVertex = forwardCollisionHelper.geometry.vertices[vertexIndex].clone();
+            var globalVertex = localVertex.applyMatrix4(forwardCollisionHelper.matrix);
+            var directionVector = globalVertex.sub(forwardCollisionHelper.position);
+            var ray = new THREE.Raycaster(originPoint, directionVector.clone().normalize());
+            var collisionResults = ray.intersectObjects(collisionObjects);
+            if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+                console.log(collisionResults[0].object.name);
+                collisionResults[0].object.material.transparent = true;
+                collisionResults[0].object.material.opacity = 0.4;
+                // controls.movementSpeed = - controls.movementSpeed*1.1;
+                // controls.moveForward = false;
+                if (controls.moveForward) {
+                controls.movementSpeed = 0;
+				collision_flag = true;
+				}
+            }
+        }
+    }
+
+
 function render() {
 
+	collisionHelper.position.x = robotCharacter.position.x ;
+	collisionHelper.position.z = robotCharacter.position.z ;
+	collisionHelper.rotation.x = robotCharacter.rotation.x ;
+	collisionHelper.rotation.y = robotCharacter.rotation.y ;
+	collisionHelper.rotation.z = robotCharacter.rotation.z;
+
+
+	robotHelper.position.x = robotCharacter.position.x ;
+	robotHelper.position.z = robotCharacter.position.z ;
+	robotHelper.rotation.y = robotCharacter.rotation.y ;
+	robotHelper.rotation.x = robotCharacter.rotation.x ;
+	robotHelper.rotation.z = robotCharacter.rotation.z ;
 
 	if ( mixer ) {
 		var time = Date.now();
 		mixer.update( ( time - prevTime ) * 0.001 );
 		prevTime = time;
 	}
+
+	checkCollision()
 
 	//  // update the picking ray with the camera and mouse position
 	// raycaster.setFromCamera( mouse, camera );
@@ -372,6 +453,9 @@ function render() {
 	composer.render( scene, camera );
 
 }
+
+
+
 
 
 init();

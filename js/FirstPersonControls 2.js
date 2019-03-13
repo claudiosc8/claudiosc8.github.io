@@ -333,6 +333,7 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 		lat = 90 - THREE.Math.radToDeg( spherical.phi );
 		lon = THREE.Math.radToDeg( spherical.theta );
 
+
 	}
 
 	this.handleResize();
