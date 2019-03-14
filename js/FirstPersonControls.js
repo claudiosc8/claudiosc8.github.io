@@ -42,12 +42,22 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	this.rotateLeft = false;
 	this.rotateRight = false;
 	this.Jump = false;
+	this.canJump = true;
 
 
 	this.mouseDragOn = false;
 
 	this.viewHalfX = 0;
 	this.viewHalfY = 0;
+
+
+	// jumptimeline = new TimelineMax();
+	// jumptimeline.to(this.object,0,{canJump : 0},"-=0");
+	// jumptimeline.to(this.object.position ,0.2,{y : 4, ease: Power2.easeOut},"-=0");
+	// jumptimeline.to(this.object.position ,0.2,{y : 0, ease: Power2.easeIn},"-=0");
+	// jumptimeline.to(this.object,0,{canJump : 1},"-=0");
+	// jumptimeline.pause();
+
 
 	function myAnimation(action, duration = 1, loop = THREE.LoopRepeat) {
 		if (!mixer.clipAction( action ).isRunning()) {
@@ -219,6 +229,7 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 			var actualMoveSpeed = delta * this.movementSpeed;
 			var actualRotation = delta * this.rotationSpeed;
+			var actualJumpVelocity = Math.max(0, 9.8 * 100.0 * delta); // 100.0 = mass 
 
 			if ( this.moveForward || ( this.autoForward && ! this.moveBackward ) ) {
 				this.object.translateZ(  ( actualMoveSpeed + this.autoSpeedFactor ) );
@@ -256,10 +267,11 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 
 			if ( this.Jump ) {
-				mixer.clipAction( idle ).stop();
-				mixer.clipAction( run ).stop();
-				myAnimation(death, 1, THREE.LoopOnce);
-				
+					
+					this.canJump = false;
+				setTimeout(function(){
+					this.canJump = true
+				}, 1000)
 			};
 
 	

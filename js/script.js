@@ -1,4 +1,4 @@
-let camera, scene, renderer, player, controls, targetPosition, model, cameraPosition, modelDistance, sky, water, texture;
+let camera, scene, renderer, player, light, controls, targetPosition, model, cameraPosition, modelDistance, sky, water, texture, floortexture;
 let now, delta, last;
 let clock;
 let robot, mixer
@@ -9,7 +9,7 @@ let thisChildren;
 let run, walk, jump, idle, death, walkjump;
 let collision_flag = false;
 var mirrorSphere, mirrorSphereCamera, cubeCamera; // for mirror material
-var robotCharacter, robotHelper, collisionHelper;
+var robotCharacter, robotHelper, collisionHelperForward, collisionHelperBackward;
 
 
 var stats = new Stats();
@@ -80,9 +80,12 @@ function load() {
 
   	const createDuck = GLTFPromiseLoader.load( 'object/RobotExpressive.glb').then( onLoad ).then( RobotPlayer ).catch( onError );
   	const createastro = GLTFPromiseLoader.load( 'object/astro.glb').then( onLoad ).then( astroSetup ).catch( onError )
-  	const createDesk = GLTFPromiseLoader.load( 'object/desk.glb').then( onLoad ).then( deskSetup ).catch( onError );
   	const createChest = GLTFPromiseLoader.load( 'object/chest.glb').then( onLoad ).then( chestSetup ).catch( onError );
-  	const createStation = GLTFPromiseLoader.load( 'object/GasStation.glb').then( onLoad ).then( stationSetup ).catch( onError );
+  	const createCinema = GLTFPromiseLoader.load( 'object/cinema.glb').then( onLoad ).then( cinemaSetup ).catch( onError );
+  	const createFountain = GLTFPromiseLoader.load( 'object/fountain.glb').then( onLoad ).then( fountainSetup ).catch( onError );
+  	const createHouse = GLTFPromiseLoader.load( 'object/house.glb').then( onLoad ).then( houseSetup ).catch( onError );
+  	const createTrees = GLTFPromiseLoader.load( 'object/trees.glb').then( onLoad ).then( treesSetup ).catch( onError );
+  	const createDiamond = GLTFPromiseLoader.load( 'object/diamond.glb').then( onLoad ).then( diamondSetup ).catch( onError );
   }
 
 	const RobotPlayer = () => {
@@ -98,20 +101,63 @@ function load() {
 
 	}  
 
-	const deskSetup = () => {
-	    thisChildren.scale.set(12,12,12);
-		thisChildren.position.set(5,0.6,-15);
-	} 
-
 	const stationSetup = () => {
-
 	    thisChildren.scale.set(6,6,6);
 		thisChildren.position.set(5,-3.75,-15);
+		thisChildren.name = "station";
 	} 
 
+	const diamondSetup = () => {
+	    thisChildren.scale.set(0.1,0.1,0.1);
+		thisChildren.position.set(-10,2,-18);
+		thisChildren.name = "diamond";
+		collisionObjects.push(thisChildren);
+		highlightObjects.push(thisChildren);
+		thisChildren.material.opacity = 1;
+		var color = new THREE.Color( 0x112233 );
+		thisChildren.material.emissive.copy(color);
+		TweenMax.to(thisChildren.rotation,8,{y:Math.PI*2,ease: Power0.easeNone,repeat:-1});
+		//find min and max 
+		var mybox = new THREE.Box3().setFromObject( thisChildren );
+		console.log( "min", mybox.min.y, "max", mybox.max.y, "size");
+	} 
+
+
+	const cinemaSetup = () => {
+	    thisChildren.scale.set(1,1,1);
+	    thisChildren.name = "cinema";
+		thisChildren.position.set(-5,0,-30);
+		collisionObjects.push(thisChildren);
+	}
+
+	const treesSetup = () => {
+	    thisChildren.scale.set(16,16,16);
+	    thisChildren.name = "trees";
+		thisChildren.position.set(-45,4,-20);
+		collisionObjects.push(thisChildren);
+
+		//
+		
+	}
+
+	const fountainSetup = () => {
+	    thisChildren.scale.set(7,7,7);
+	    thisChildren.name = "fountain";
+		thisChildren.position.set(-20,0,1);
+		collisionObjects.push(thisChildren);
+	}
+
+	const houseSetup = () => {
+	    thisChildren.scale.set(8,8,8);
+	    thisChildren.name = "house";
+		thisChildren.position.set(30,5.1,10);
+		thisChildren.rotateY(THREE.Math.degToRad(180));
+		collisionObjects.push(thisChildren);
+	}
 
 	const chestSetup = () => {
 	    thisChildren.scale.set(2,2,2);
+	    thisChildren.name = "chest";
 		thisChildren.position.set(-5,3,-15);
 		thisChildren.rotateY(THREE.Math.degToRad(180));
 		collisionObjects.push(thisChildren);
@@ -146,40 +192,35 @@ function init() {
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 	renderer.gammaOutput = true;
 	renderer.gammaFactor = 2.2;
+	composer = new THREE.EffectComposer( renderer );
 	scene = new THREE.Scene();
 	controls = new THREE.FirstPersonControls( scene );
+	fogColor = new THREE.Color(0xffffff);
+    scene.background = fogColor;
+    scene.fog = new THREE.Fog(fogColor, 20, 50);
+    window.addEventListener( 'resize', onWindowResize, false );
 
 	// CAMERA SETUP
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
 	camera.position.set(0,7,0);
  	cameraPosition = camera.position;
 
-	// // EVENT LISTENERS 
-	// window.addEventListener( 'resize', onWindowResize, false );
-	// window.addEventListener( 'click', onMouseClick, false );
 
 
-	// var skyGeo = new THREE.SphereGeometry(10000, 25, 25); 
-	// var textloader  = new THREE.TextureLoader(),
- //        texture = textloader.load( "images/hdri.jpg" );
- //    var material = new THREE.MeshPhongMaterial({ 
- //        map: texture, emissiveMap: texture, emissive: 0x4080ff
-	// });
-	// material.side = THREE.BackSide;
-	// var sky = new THREE.Mesh(skyGeo, material);
- //    sky.material.side = THREE.BackSide;
- //    scene.add(sky);
+	var reflectionCube = new THREE.CubeTextureLoader()
+		.setPath( 'images/SwedishRoyalCastle/' )
+		.load( [ 'px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg' ] );
+	reflectionCube.format = THREE.RGBFormat;
+	// scene.background = reflectionCube;
 
-
-		var reflectionCube = new THREE.CubeTextureLoader()
-			.setPath( 'images/SwedishRoyalCastle/' )
-			.load( [ 'px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg' ] );
-		reflectionCube.format = THREE.RGBFormat;
-		// scene.background = reflectionCube;
-
+	function rotateObject(object, degreeX=0, degreeY=0, degreeZ=0) {
+  		 object.rotateX(THREE.Math.degToRad(degreeX));
+ 		  object.rotateY(THREE.Math.degToRad(degreeY));
+  		 object.rotateZ(THREE.Math.degToRad(degreeZ));
+	}
 
 	//lights
-		var light = new THREE.PointLight( 0xffffff, 1.5, 400 );
+		var light = new THREE.PointLight( 0xffffff, 1, 400 );
 		light.position.set( 0, 20, 10 );
 		light.castShadow = true;
 		light.shadow.mapSize.width = 2048;  // default
@@ -189,20 +230,27 @@ function init() {
 		light = new THREE.AmbientLight( 0x888888);
 		scene.add( light );
 
+
 	//geometry
 		var cubeGeometry = new THREE.BoxGeometry( 1, 1, 1 );
 		var sphereGeometry = new THREE.SphereGeometry( 1, 16, 16 );
 		var planegeometry = new THREE.PlaneGeometry( 100, 100, 100, 100);
 
 		var robotHelperGeometry = new THREE.CylinderGeometry( 2,2,5,8,3 );
-		var collisionHelperGeometry = new THREE.BoxGeometry( 3, 5, 2, 2,2,2);
+		var collisionHelperGeometry = new THREE.BoxGeometry( 1, 5, 2, 2,2,2);
+		var collisionHelperGeometry2 = new THREE.BoxGeometry( 1, 5, 2, 2,2,2);
+
+		var floortexture  = new THREE.TextureLoader().load( "images/StoneFloorTexture.jpg" );
+		floortexture.wrapS = THREE.RepeatWrapping;
+		floortexture.wrapT = THREE.RepeatWrapping;
+		floortexture.repeat.set( 16, 16 );
 
 	//materials
-		var mone = new THREE.MeshPhongMaterial( { color: 0x4080ff} );
+		var mone = new THREE.MeshPhongMaterial( { color: 0xffffff, map: floortexture,} );
 		var mtwo = new THREE.MeshPhongMaterial( { color: 0xde2301, flatShading:false } );
 		var mthree = new THREE.MeshPhongMaterial( { color: 0x22de09, reflectivity: 1, shininess: 2} );
-
-		var robomat = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true,} );
+		var robomatred = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true, transparent:true, opacity: 1} );
+		var robomatyellow = new THREE.MeshBasicMaterial( { color: 0xffff00, wireframe: true, transparent:true, opacity: 1} );
 
 		var toonMaterial = new THREE.MeshToonMaterial( {
 								color: 0xffff00,
@@ -213,18 +261,26 @@ function init() {
 
 							} );
 
+		var torusgeometry = new THREE.TorusGeometry( 50, 1, 3, 8 );
+		var torus = new THREE.Mesh( torusgeometry, new THREE.MeshBasicMaterial( {transparent:true, opacity: 0} ) );
+		torus.rotateX(THREE.Math.degToRad(90));
+		torus.name = "torus";
+		scene.add( torus );
+
 	var cube = new THREE.Mesh( cubeGeometry, mthree );
 	var player = new THREE.Mesh( sphereGeometry, toonMaterial );
 	var plane = new THREE.Mesh( planegeometry, mone );
 
-	collisionHelper = new THREE.Mesh( collisionHelperGeometry, robomat );
-	collisionHelper.name = "collisionHelper";
-	collisionHelper.position.y = 2.5 ;
-	collisionHelper.geometry.translate( 0, 0, 1 );
+	collisionHelperForward = new THREE.Mesh( collisionHelperGeometry, robomatred );
+	collisionHelperForward.name = "collisionHelperForward";
+	collisionHelperForward.geometry.translate( 0, 2.5, 1 );
 
-	robotHelper = new THREE.Mesh( robotHelperGeometry, robomat );
-	robotHelper.position.y = 2.5 ;
-	robotHelper.name = "robotHelper";
+	collisionHelperBackward = new THREE.Mesh( collisionHelperGeometry2, robomatyellow );
+	collisionHelperBackward.name = "collisionHelperBackward";
+	collisionHelperBackward.geometry.translate( 0, 2.5, -1 );
+
+	scene.add( collisionHelperBackward );
+	scene.add( collisionHelperForward );
 
 	plane.material.side = THREE.DoubleSide;
    	player.castShadow = true; 
@@ -233,11 +289,7 @@ function init() {
 	cube.receiveShadow = true; 
 	plane.receiveShadow = true; 
 
-	function rotateObject(object, degreeX=0, degreeY=0, degreeZ=0) {
-	   object.rotateX(THREE.Math.degToRad(degreeX));
-	   object.rotateY(THREE.Math.degToRad(degreeY));
-	   object.rotateZ(THREE.Math.degToRad(degreeZ));
-	}
+	
 
 	rotateObject(plane, 90, 0, 0);
 	plane.position.set(0,-0.02,0);
@@ -250,81 +302,45 @@ function init() {
 	scene.add( player );
 	scene.add( plane );
 
-	scene.add( robotHelper );
-	scene.add( collisionHelper );
 
-	collisionObjects.push(cube, player);
+
+	collisionObjects.push(cube, player, torus);
 
 	TweenMax.to(cube.rotation,4,{y:Math.PI*2, ease:Power2.easeInOut,repeat:-1});
 	TweenMax.to(cube.position,4,{y:2,ease:Power2.easeInOut,yoyo:true, repeat:-1});
 
 	targetPosition = new THREE.Vector3( );
 
-	//collision objects
-	highlightObjects.push(scene);
-	highlightScene = highlightObjects[0];
-	collisionMesh = [];
 
+	scene.userData.outlineColor = new THREE.Color( 0x00FFFF );
 
-    //  // postprocessing
-    // composer = new THREE.EffectComposer(renderer);
-
-    // var renderPass = new THREE.RenderPass(scene, camera);
-    // composer.addPass(renderPass);
-
-    // outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera,);
-    // composer.addPass(outlinePass);
-    // outlinePass.selectedObjects = [collisionScene];
-
-    // for (var i = 0; i < collisionScene.children.length; i++ ) {
-    // 	selectedObject = collisionScene.children[i];
-    // 	collisionMesh.push(selectedObject);
-    // 	if (collisionScene.children[i].isMesh) {
-    	
-    //     outlinePass.selectedObjects = [player];
-
-   	// 	 }
-    // }
-
-
- //    effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
- //    effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
- //    effectFXAA.renderToScreen = true;
- //    composer.addPass(effectFXAA);
-
-
-	// outlinePass.edgeGlow = 0.0;
-	// outlinePass.usePatternTexture = false;
-	// outlinePass.edgeThickness = 2.0;
-	// outlinePass.edgeStrength = 100.0;
-	// outlinePass.downSampleRatio = 0;
-	// outlinePass.pulsePeriod = 0;
-	// outlinePass.visibleEdgeColor = new THREE.Color(0xffffff);
-	// outlinePass.hiddenEdgeColor = new THREE.Color( 0, 0, 0 );
-	// outlinePass.depthMaterial.blending = THREE.MultiplyBlending;
-
- //    window.addEventListener('mousemove', onTouchMove);
- //    window.addEventListener('touchmove', onTouchMove);
-
- //    function onTouchMove(event) {
- //        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
- //        mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
-
- //        raycaster.setFromCamera(mouse, camera);
-
- //        intersects = raycaster.intersectObjects(highlightObjects,true);
-
- //        if (intersects.length > 0) {
- //            var selectedObject = intersects[0].object;
- //            outlinePass.selectedObjects = [selectedObject];
- //        }
- //    }
-
+	 outlineSelection() 
 }
 
+function outlineSelection() {
+	highlightScene = highlightObjects[0];
+	collisionMesh = [];
+	composer.addPass( new THREE.RenderPass( scene, camera ) );
+	createOutline( scene, highlightObjects, camera, scene.userData.outlineColor );
+}
+
+function createOutline( scene, objectsArray, camera, visibleColor ) {
+	outlinePass = new THREE.OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera, objectsArray );
+	outlinePass.edgeStrength = 1;
+	outlinePass.edgeGlow = 2;
+	outlinePass.edgeThickness = 1;
+	outlinePass.visibleEdgeColor = visibleColor;
+	outlinePass.hiddenEdgeColor.set( 0 );
+	outlinePass.renderToScreen = true;
+	outlinePass.pulsePeriod = 5;
+	composer.addPass( outlinePass );
+	scene.userData.outlineEnabled = true;
+	
+	return outlinePass;
+}
+
+
 function onMouseClick( event ) {
-	// calculate mouse position in normalized device coordinates
-	// (-1 to +1) for both components
 
 	event.preventDefault();
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -336,6 +352,7 @@ function onWindowResize(){
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
+   
 }
 				
 function animate() {
@@ -350,20 +367,6 @@ function animate() {
 	var delta = clock.getDelta();
 	controls.update(delta);
 	camera.lookAt(targetPosition);
-
-	if(cameraPosition.distanceTo(targetPosition)>40) {
-		console.log("too far!");
-		// controls.moveForward = false;
-		controls.movementSpeed = - controls.movementSpeed*1.1;
-		collision_flag = true;
-		
-
-	} else {
-		controls.movementSpeed = 15;
-		collision_flag = false;
-	}
-
-
 
 	if(cameraPosition.distanceTo(targetPosition)>30) {
 		TweenMax.to(camera,2,{fov:20});
@@ -381,26 +384,49 @@ var prevTime = Date.now();
 
 
  function checkCollision() {
-        collisionObjects.forEach(function (obj) {
-            obj.material.transparent = false;
-            obj.material.opacity = 1.0;
-        });
 
-        var forwardCollisionHelper = scene.getObjectByName('collisionHelper');
-        var originPoint = forwardCollisionHelper.position.clone();
+ 		collisionHelperForward.position.copy(robotCharacter.position);
+		collisionHelperForward.rotation.copy(robotCharacter.rotation);
+		collisionHelperBackward.position.copy(robotCharacter.position);
+		collisionHelperBackward.rotation.copy(robotCharacter.rotation);
+
+		collisionHelperForward.material.opacity = 0;
+		collisionHelperBackward.material.opacity = 0;
+
+		controls.movementSpeed = 15;
+
+        var backwardCollisionHelper = scene.getObjectByName('collisionHelperBackward');
+        var forwardCollisionHelper = scene.getObjectByName('collisionHelperForward');
+        var backwardOriginPoint = backwardCollisionHelper.position.clone();
+        var forwardOriginPoint = forwardCollisionHelper.position.clone();
         for (var vertexIndex = 0; vertexIndex < forwardCollisionHelper.geometry.vertices.length; vertexIndex++) {
             var localVertex = forwardCollisionHelper.geometry.vertices[vertexIndex].clone();
             var globalVertex = localVertex.applyMatrix4(forwardCollisionHelper.matrix);
             var directionVector = globalVertex.sub(forwardCollisionHelper.position);
-            var ray = new THREE.Raycaster(originPoint, directionVector.clone().normalize());
+            var ray = new THREE.Raycaster(forwardOriginPoint, directionVector.clone().normalize());
             var collisionResults = ray.intersectObjects(collisionObjects);
             if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
                 console.log(collisionResults[0].object.name);
-                collisionResults[0].object.material.transparent = true;
-                collisionResults[0].object.material.opacity = 0.4;
-                // controls.movementSpeed = - controls.movementSpeed*1.1;
-                // controls.moveForward = false;
+                collisionHelperForward.material.opacity = 1;
                 if (controls.moveForward) {
+                controls.movementSpeed = 0;
+				collision_flag = true;
+				}
+				if (collisionResults[0].object.name === "chest") {
+					console.log("treasure!")
+				}
+            }
+        }
+        for (var vertexIndex = 0; vertexIndex < backwardCollisionHelper.geometry.vertices.length; vertexIndex++) {
+            var localVertex = backwardCollisionHelper.geometry.vertices[vertexIndex].clone();
+            var globalVertex = localVertex.applyMatrix4(backwardCollisionHelper.matrix);
+            var directionVector = globalVertex.sub(backwardCollisionHelper.position);
+            var ray = new THREE.Raycaster(backwardOriginPoint, directionVector.clone().normalize());
+            var collisionResults = ray.intersectObjects(collisionObjects);
+            if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+                console.log(collisionResults[0].object.name);
+                collisionHelperBackward.material.opacity = 1;
+                if (controls.moveBackward) {
                 controls.movementSpeed = 0;
 				collision_flag = true;
 				}
@@ -411,19 +437,6 @@ var prevTime = Date.now();
 
 function render() {
 
-	collisionHelper.position.x = robotCharacter.position.x ;
-	collisionHelper.position.z = robotCharacter.position.z ;
-	collisionHelper.rotation.x = robotCharacter.rotation.x ;
-	collisionHelper.rotation.y = robotCharacter.rotation.y ;
-	collisionHelper.rotation.z = robotCharacter.rotation.z;
-
-
-	robotHelper.position.x = robotCharacter.position.x ;
-	robotHelper.position.z = robotCharacter.position.z ;
-	robotHelper.rotation.y = robotCharacter.rotation.y ;
-	robotHelper.rotation.x = robotCharacter.rotation.x ;
-	robotHelper.rotation.z = robotCharacter.rotation.z ;
-
 	if ( mixer ) {
 		var time = Date.now();
 		mixer.update( ( time - prevTime ) * 0.001 );
@@ -432,25 +445,7 @@ function render() {
 
 	checkCollision()
 
-	//  // update the picking ray with the camera and mouse position
-	// raycaster.setFromCamera( mouse, camera );
-
-
-	// // calculate objects intersecting the picking ray
-	// intersects = raycaster.intersectObjects( collisionObjects );
-	
-	// for ( var i = 0; i < intersects.length; i++ ) {
-
-	// intersects[ i ].object.material.color.set( 0xff0000 );
-	// intersects[ i ].object.material.emissive.set( 0xff0000 );
-	// intersects[ i ].object.material.specular.set( 0xffffff );
-	// intersects[ i ].object.material.shininess = 100;
-	// intersects[ i ].object.material.flatShading = true;
-	// intersects[ i ].object.material.needsUpdate = true;
-
-	// }
-
-	renderer.render( scene, camera );
+	composer.render( scene, camera );
 
 }
 
